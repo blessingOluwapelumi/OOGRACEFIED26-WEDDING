@@ -1,0 +1,1206 @@
+/* ============================================================
+   Kathryn & Samuel, 10.10.26
+   The couple are keyed off the studio seamless and stand on a
+   field sampled from that same backdrop, with their names in
+   script behind them. Bands of field and paper, torn apart.
+   ============================================================ */
+
+:root{
+  --field:   #A7B7CC;   /* the studio roll, sampled from the photographs */
+  --field-2: #95AECC;
+  --paper:   #F6F1E9;
+  --ink:     #0A1130;
+  --ink-2:   #3D4A6E;
+  --blue:    #0B2FB5;
+  --coral:   #C0492F;   /* their coral, taken down for text contrast */
+  --coral-lit: #F2725C;
+  --red:     #A5301C;   /* his name, dark enough to read on the field */
+  --hair:    rgb(10 17 48 / .18);
+
+  --script:"Pinyon Script",cursive;
+  --disp:"Alegreya",Georgia,"Times New Roman",serif;
+  --ui:"Alegreya Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+
+  --ease:cubic-bezier(.16,1,.3,1);
+  --pad:1.5rem;
+  --bar:3.75rem;
+}
+
+*{box-sizing:border-box}
+/* the hidden attribute must win over any component's own display, or a
+   toggled-off camera frame, fallback panel or button quietly stays on screen */
+[hidden]{display:none !important}
+/* paper, not field, is what should show past the end of a short page (the
+   field blue is a section accent, not a page-level fallback) */
+html{background:var(--paper)}
+body{
+  margin:0;background:var(--field);color:var(--ink-2);
+  font-family:var(--ui);font-size:1.0625rem;line-height:1.62;
+  -webkit-font-smoothing:antialiased;-webkit-text-size-adjust:100%;
+  overflow-x:hidden;
+}
+img{display:block;max-width:100%}
+a{color:inherit}
+::selection{background:var(--ink);color:var(--paper)}
+:focus-visible{outline:2px solid currentColor;outline-offset:4px}
+
+.skip{position:absolute;left:-9999px}
+.skip:focus{left:.75rem;top:.75rem;z-index:90;background:var(--ink);color:var(--paper);padding:.7rem 1rem;font-weight:600}
+
+.wrap{width:100%;max-width:56rem;margin-inline:auto;padding-inline:var(--pad)}
+.narrow{max-width:34rem}
+
+/* ---------------- the bar ---------------- */
+/* Liquid Glass: the controls float as their own islands and the page runs
+   edge to edge underneath them, softened by a scroll edge rather than a rule. */
+
+.bar{
+  position:fixed;top:clamp(.7rem,1.5vw,1.15rem);left:0;right:0;z-index:40;
+  display:flex;align-items:center;justify-content:space-between;
+  padding-inline:clamp(.7rem,2vw,1.4rem);
+  pointer-events:none;
+}
+.bar>*{pointer-events:auto}
+
+.glass{
+  background:rgb(255 255 255 / .52);
+  -webkit-backdrop-filter:blur(24px) saturate(180%);
+  backdrop-filter:blur(24px) saturate(180%);
+  border-radius:999px;
+  box-shadow:
+    0 8px 30px rgb(10 17 48 / .10),
+    inset 0 1px 0 rgb(255 255 255 / .60),
+    inset 0 0 0 .5px rgb(255 255 255 / .28);
+}
+
+.mono{
+  display:inline-flex;align-items:center;height:2.75rem;padding-inline:1.05rem;
+  font-family:var(--script);font-size:1.5rem;line-height:1;padding-bottom:.18em;
+  color:var(--ink);text-decoration:none;
+}
+.bar-nav{display:none}
+
+.menu-btn{
+  appearance:none;border:0;cursor:pointer;color:var(--ink);
+  display:inline-flex;align-items:center;height:2.75rem;padding-inline:1.15rem;
+  font-family:var(--disp);font-size:1rem;font-weight:500;letter-spacing:.1em;
+  transition:color 200ms var(--ease);
+}
+.menu-btn:hover{color:var(--coral)}
+
+/* the page fades as it passes beneath the floating controls */
+.scroll-edge{
+  position:fixed;inset:0 0 auto 0;height:clamp(72px,9vw,116px);z-index:39;
+  pointer-events:none;
+  -webkit-backdrop-filter:blur(7px);backdrop-filter:blur(7px);
+  -webkit-mask-image:linear-gradient(to bottom,#000 26%,transparent 100%);
+  mask-image:linear-gradient(to bottom,#000 26%,transparent 100%);
+}
+
+.contents{
+  position:fixed;inset:0;z-index:50;background:var(--ink);color:#E4EAFA;
+  padding:calc(var(--bar) + 1.5rem) var(--pad) var(--pad);overflow-y:auto;
+  visibility:hidden;opacity:0;transition:opacity 320ms var(--ease),visibility 320ms;
+}
+.contents[data-open="1"]{visibility:visible;opacity:1}
+.contents-close{
+  position:absolute;top:calc((var(--bar) - 2.125rem)/2);right:var(--pad);
+  appearance:none;border:1px solid rgb(228 234 250 / .4);background:transparent;color:#E4EAFA;
+  font-family:var(--ui);font-size:.6875rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;height:2.125rem;padding-inline:.9rem;border-radius:999px;cursor:pointer;
+}
+.contents ol{list-style:none;margin:0;padding:0}
+.contents li{border-top:1px solid rgb(228 234 250 / .18)}
+.contents li:last-child{border-bottom:1px solid rgb(228 234 250 / .18)}
+.contents a{
+  display:flex;align-items:baseline;gap:1rem;padding:1.05rem 0;text-decoration:none;
+  font-family:var(--script);font-size:clamp(1.75rem,8vw,2.5rem);line-height:1.1;
+  transition:color 200ms var(--ease);
+}
+.contents a:hover{color:#A9BEFF}
+.contents a b{font-family:var(--ui);font-weight:600;font-size:.75rem;letter-spacing:.1em;color:#8296D6;min-width:1.4rem}
+
+/* ---------------- bands ---------------- */
+
+.band{position:relative}
+.band--field{background:var(--field)}
+
+/* a real seamless is not a flat swatch: the light falls off from a hot spot
+   behind the subject to the corners, and the paper has grain. */
+.band--field,
+.band--field2{
+  background-image:
+    radial-gradient(78% 62% at 50% 30%, rgb(255 255 255 / .34), rgb(255 255 255 / 0) 62%),
+    radial-gradient(120% 100% at 50% 108%, rgb(10 17 48 / .13), rgb(10 17 48 / 0) 58%);
+  background-repeat:no-repeat;
+}
+.band--field::before,
+.band--field2::before{
+  content:"";position:absolute;inset:0;z-index:0;pointer-events:none;opacity:.5;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='140' height='140'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='140' height='140' filter='url(%23n)' opacity='.05'/%3E%3C/svg%3E");
+}
+.band--field2{background:var(--field-2)}
+.band--paper{background:var(--paper)}
+
+/* a torn edge, filled with the colour of whatever comes next */
+.tear{position:absolute;left:0;right:0;bottom:0;z-index:6;line-height:0;pointer-events:none}
+.tear svg{display:block;width:100%;height:clamp(46px,6.5vw,92px)}
+.tear--up,
+.tear--top{bottom:calc(100% - 1px);top:auto}
+
+/* ---------------- the hero ---------------- */
+
+.hero{position:relative;min-height:100svh;overflow:hidden;isolation:isolate;display:grid;place-items:end center}
+.figure{position:relative;z-index:2;height:clamp(380px,72svh,880px);margin-bottom:clamp(112px,12.5vw,182px)}
+.figure img{height:100%;width:auto}
+.figure .shadow{position:absolute;left:-6%;right:-6%;bottom:-2.2%;height:9%;
+  background:radial-gradient(52% 100% at 50% 100%,rgb(20 30 58 / .22),rgb(20 30 58 / 0) 70%)}
+
+.script{position:absolute;z-index:1;left:50%;transform:translateX(-50%);width:max-content;
+  font-family:var(--script);line-height:.78;white-space:nowrap;
+  text-shadow:0 3px 44px rgb(10 17 48 / .12)}
+.s1{color:var(--blue)}   /* hers */
+.s2{color:var(--red)}    /* his */
+.s1{top:9svh;font-size:clamp(6rem,25vw,21rem)}
+.s2{top:41svh;font-size:clamp(6rem,25vw,21rem)}
+/* the crop ends at their waist, so it has to leave rather than stop. masking
+   the image made them see-through and his name read straight through her dress,
+   which kills the whole point of them standing in front of it. so the couple
+   stay opaque and the field rises over the whole scene instead, which also
+   avoids the pale rectangle a figure-shaped overlay leaves behind. */
+.hero .figure{height:clamp(420px,82svh,980px);margin-bottom:clamp(112px,12vw,172px)}
+.hero .shadow{display:none}
+.hero::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;height:40%;
+  z-index:4;pointer-events:none;
+  background:linear-gradient(to bottom,
+    rgb(167 183 204 / 0)    0%,
+    rgb(167 183 204 / .08) 22%,
+    rgb(167 183 204 / .26) 40%,
+    rgb(167 183 204 / .52) 57%,
+    rgb(167 183 204 / .76) 72%,
+    rgb(167 183 204 / .92) 85%,
+    rgb(167 183 204 / 1)  100%);
+}
+
+/* their hashtag, flat on the surface below where the couple dissolve away */
+.hero-tag{
+  position:absolute;z-index:5;left:50%;bottom:clamp(3.25rem,5.5vw,5.5rem);
+  margin:0;white-space:nowrap;pointer-events:none;
+  font-family:var(--disp);font-weight:600;
+  font-size:clamp(1.25rem,4.4vw,3.5rem);
+  letter-spacing:.34em;text-indent:.34em;
+  color:rgb(16 26 54 / .34);
+  transform:translateX(-50%) perspective(760px) rotateX(68deg) scaleY(1.4);
+  transform-origin:50% 100%;
+}
+
+.s2 i{font-family:var(--disp);font-style:italic;font-size:.2em;letter-spacing:.04em;
+  color:var(--ink);vertical-align:.66em;padding-right:.12em}
+
+/* on a phone there is no room beside them, so the names sit above their heads
+   and the figure drops until it clears the second one */
+@media (max-width:47.99em){
+  .s1{top:2.5svh;font-size:29vw}
+  .s2{top:15svh;font-size:29vw}
+  .hero .figure{height:clamp(340px,66svh,760px);margin-bottom:clamp(92px,19vw,134px)}
+  .hero-tag{font-size:8vw;letter-spacing:.22em;text-indent:.22em;bottom:3.25rem}
+}
+
+/* ---------------- shared type ---------------- */
+
+.hand{
+  font-family:var(--script);font-weight:400;line-height:1;
+  font-size:clamp(2.75rem,10vw,4.25rem);color:var(--blue);margin:0 0 1rem;
+  padding-bottom:.06em;
+}
+.hand--coral{color:var(--coral)}
+.hand--long{font-size:clamp(2.25rem,8vw,3.5rem);line-height:1.1;max-width:15ch;
+  margin-inline:auto;text-wrap:balance}
+.lede{font-family:var(--disp);font-size:clamp(1.125rem,3.6vw,1.375rem);line-height:1.55;color:var(--ink);margin:0}
+.note{font-family:var(--disp);font-size:1.0625rem;line-height:1.6;margin:0}
+.stamp{font-family:var(--disp);font-weight:500;font-size:clamp(.75rem,1.9vw,.875rem);
+  letter-spacing:.24em;text-transform:uppercase;color:var(--ink-2);margin:0 0 1.25rem}
+
+/* the engraved card: a solid navy plate with a hairline ruled inside it, the
+   way an invitation's reply card is printed. set in the serif, because
+   everything ceremonial on this site is. */
+.act{
+  position:relative;
+  display:inline-flex;align-items:center;justify-content:center;
+  min-height:3.875rem;padding:0 3rem;
+  font-family:var(--disp);font-weight:500;font-size:1.25rem;letter-spacing:.06em;
+  text-decoration:none;border-radius:2px;
+  border:1px solid var(--ink);background:var(--ink);color:var(--paper);
+  cursor:pointer;transition:background 240ms var(--ease),color 240ms var(--ease);
+}
+.act::after{
+  content:"";position:absolute;inset:5px;border-radius:1px;
+  border:1px solid rgb(246 241 233 / .38);
+  transition:border-color 240ms var(--ease);
+}
+.act:hover{background:transparent;color:var(--ink)}
+.act:hover::after{border-color:rgb(10 17 48 / .34)}
+
+/* the same plate, ruled but unfilled, for a secondary action */
+.act--quiet{background:transparent;color:var(--ink);border-color:var(--hair)}
+.act--quiet::after{border-color:rgb(10 17 48 / .16)}
+.act--quiet:hover{background:transparent;color:var(--coral);border-color:var(--coral)}
+.act--quiet:hover::after{border-color:rgb(192 73 47 / .30)}
+.act .ico{width:1em;height:1em;margin-left:.6rem;opacity:.72;flex:0 0 auto}
+
+.invite .act-row{justify-content:center;margin-top:2.25rem}
+.link{font-family:var(--ui);font-weight:600;color:var(--blue);text-underline-offset:4px}
+
+/* ---------------- the invitation ---------------- */
+
+.invite{text-align:center;padding-block:clamp(3rem,9vw,6rem) clamp(4.5rem,11vw,8rem)}
+
+.cal{margin:2.5rem auto 0;max-width:19rem;font-family:var(--ui)}
+.cal-h{font-family:var(--disp);font-weight:500;font-size:.8125rem;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--ink-2);margin:0 0 .875rem}
+.cal-g{display:flex;flex-wrap:wrap;font-size:.875rem}
+.cal-g b,.cal-g span{flex:0 0 14.2857%;height:2.4em;display:flex;align-items:center;justify-content:center}
+.cal-g b{font-weight:600;font-size:.625rem;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-2);opacity:.75;height:2em}
+.cal-g span{color:var(--ink-2)}
+.cal-g .mark{position:relative;color:var(--ink);font-weight:600}
+.cal-g .mark::after{
+  content:"";position:absolute;left:50%;top:50%;
+  width:2.9em;height:2.5em;
+  transform:translate(-50%,-50%) rotate(-8deg) scale(.72);
+  border:2px solid var(--coral);border-radius:50%;
+  opacity:0;pointer-events:none;
+}
+.js .cal.lit .mark::after{opacity:1;transform:translate(-50%,-50%) rotate(-8deg) scale(1);
+  transition:opacity 520ms var(--ease) 260ms,transform 720ms var(--ease) 260ms}
+
+/* ---------------- their words ---------------- */
+
+.words{padding-block:clamp(3.5rem,10vw,7rem)}
+.words-grid{display:grid;gap:2rem}
+.arch{overflow:hidden;border-radius:9999px 9999px 8px 8px;background:rgb(255 255 255 / .25);
+  box-shadow:0 24px 60px -34px rgb(10 17 48 / .55)}
+.arch img{width:100%;height:clamp(19rem,54vw,29rem);object-fit:cover;object-position:center 20%}
+/* a portrait photograph needs a portrait window. at full phone width and only
+   19rem tall the arch went wider than it was deep, so it threw away a fifth of
+   the frame and the dome curved straight through the top of her gele. this has
+   to sit after the rule it overrides, not up in the hero block, or source
+   order hands it back. */
+@media (max-width:47.99em){
+  .arch img{height:auto;aspect-ratio:4/5;object-position:center 15%}
+}
+.said+.said{margin-top:1.75rem;padding-top:1.75rem;border-top:1px solid var(--hair)}
+.who{font-family:var(--ui);font-size:.6875rem;font-weight:600;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--blue);margin:0 0 .625rem}
+.said:nth-of-type(2) .who{color:var(--red)}   /* his */
+.quote{font-family:var(--disp);font-size:clamp(1.3125rem,5vw,1.75rem);line-height:1.34;
+  color:var(--ink);margin:0;text-wrap:pretty}
+.words-more{margin:2rem 0 0}
+
+/* ---------------- the day, threaded on a line ---------------- */
+
+.day{padding-block:clamp(3.5rem,10vw,6.5rem) clamp(4.5rem,11vw,8rem);text-align:center}
+.thread{position:relative;margin:2.5rem auto 0;max-width:40rem}
+.thread > svg{left:0;right:0}
+.thread > svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;pointer-events:none;
+  -webkit-mask-image:linear-gradient(to bottom,transparent 0,#000 7%,#000 90%,transparent 100%);
+  mask-image:linear-gradient(to bottom,transparent 0,#000 7%,#000 90%,transparent 100%)}
+.road-bed{fill:none;stroke:var(--coral);stroke-width:32;opacity:.11;stroke-linecap:round}
+.road-line{stroke-width:1.6;opacity:.65}
+.js .road-line{stroke-dasharray:10 14}
+.thread-path{fill:none;stroke:var(--coral);stroke-width:1.5;opacity:.45;
+  stroke-dasharray:var(--len);stroke-dashoffset:var(--len)}
+.rite{position:relative;padding:1.75rem 0}
+.rite-when{font-family:var(--ui);font-size:.6875rem;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-2);margin:0 0 .5rem}
+.cal-g .on{color:var(--coral);font-weight:600}
+.rite h3{font-family:var(--script);font-size:clamp(2rem,7.5vw,2.75rem);line-height:1;
+  color:var(--coral);margin:0 0 .625rem;font-weight:400;padding-bottom:.05em}
+.rite dl{margin:0;display:inline-grid;grid-template-columns:auto auto;gap:.35rem .9rem;text-align:left}
+.rite dt{font-family:var(--ui);font-size:.625rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--ink-2);padding-top:.42em}
+.rite dd{margin:0;font-family:var(--disp);font-size:1.0625rem;color:var(--ink)}
+.venue{
+  color:var(--coral);font-weight:500;text-decoration:none;
+  border-bottom:1px solid color-mix(in srgb,var(--coral) 45%,transparent);
+  padding-bottom:1px;white-space:nowrap;
+  transition:border-color 200ms var(--ease),color 200ms var(--ease);
+}
+.venue:hover{color:var(--coral);border-bottom-color:var(--coral)}
+.venue .pin{position:static;display:inline-block;width:.62em;height:.8em;margin-left:.32em;vertical-align:-.04em}
+
+.tbc{color:var(--ink-2);text-decoration:underline dotted var(--hair);text-underline-offset:4px}
+
+/* a per-gathering calendar link, quieter than the venue above it */
+.rite-cal{margin:.875rem 0 0}
+.rite-cal a{
+  display:inline-flex;align-items:center;gap:.45rem;
+  font-family:var(--ui);font-size:.8125rem;font-weight:600;
+  letter-spacing:.06em;color:var(--ink-2);text-decoration:none;
+  border-bottom:1px solid var(--hair);padding-bottom:2px;
+  transition:color 200ms var(--ease),border-color 200ms var(--ease);
+}
+.rite-cal a:hover{color:var(--coral);border-bottom-color:var(--coral)}
+.rite-cal .ico{width:.95em;height:.95em;opacity:.7;margin:0}
+.rite .inner{max-width:21rem;text-align:left}
+.rite:nth-of-type(odd) .inner{margin-left:auto}    /* right of the road */
+.rite:nth-of-type(even) .inner{margin-right:auto}  /* left of the road */
+
+.stop{
+  position:absolute;width:11px;height:11px;margin:-5.5px 0 0 -5.5px;
+  border-radius:50%;background:var(--coral);box-shadow:0 0 0 4px var(--paper);
+  opacity:0;transform:scale(.4);pointer-events:none;
+}
+.stop.lit{opacity:1;transform:scale(1);transition:opacity 420ms var(--ease) var(--d,0ms),transform 520ms var(--ease) var(--d,0ms)}
+
+/* ---------------- what you need ---------------- */
+
+.need{padding-block:0 clamp(4.5rem,12vw,8rem)}
+.rows{border-top:1px solid var(--hair)}
+.row{display:grid;grid-template-columns:2rem 1fr 1.125rem;align-items:center;gap:0 1rem;
+  padding:1.125rem 0;border-bottom:1px solid var(--hair);text-decoration:none;color:inherit;
+  transition:padding-left 260ms var(--ease)}
+.row:hover{padding-left:.5rem}
+.row:hover .row-t{color:var(--blue)}
+.row:hover .row-go{transform:translateX(4px);opacity:1}
+.row-n{font-family:var(--disp);font-weight:700;font-size:1.375rem;line-height:1;color:var(--coral);
+  font-variant-numeric:tabular-nums}
+.row-t{display:block;font-family:var(--script);font-size:clamp(1.5rem,6vw,2rem);line-height:1.05;
+  color:var(--ink);padding-bottom:.04em;transition:color 200ms var(--ease)}
+.row-s{display:block;font-family:var(--disp);font-size:1rem;line-height:1.45;color:var(--ink-2)}
+.row-go{width:1.125rem;color:var(--ink-2);opacity:.5;transition:transform 240ms var(--ease),opacity 240ms var(--ease)}
+.row-go svg{width:100%;height:auto}
+
+/* ---------------- the close ---------------- */
+
+.close{position:relative;min-height:100svh;overflow:hidden;isolation:isolate;
+  display:grid;place-items:end center;background:var(--field-2)}
+.close .figure{height:clamp(400px,60svh,760px)}
+/* the date sits behind them, the way the names do in the hero, so the couple
+   take a bite out of the bottom of the letters where the two meet. it hangs
+   off the top of the figure rather than off the viewport: the photograph is
+   cropped to the top of his head, so any fixed offset either printed the date
+   across their faces or, once it went behind them, buried the middle of it. */
+.close-words{position:absolute;z-index:1;left:0;right:0;text-align:center;padding-inline:var(--pad);
+  top:auto;bottom:calc(clamp(400px,60svh,760px) + clamp(112px,12.5vw,182px) - 1.75rem)}
+.date{font-family:var(--script);font-size:min(11rem,20vw,15svh);line-height:.85;color:#fff;
+  margin:0;padding-bottom:.05em;text-shadow:0 3px 44px rgb(10 17 48 / .16)}
+.hash{font-family:var(--ui);font-size:.8125rem;font-weight:600;letter-spacing:.22em;color:var(--ink);margin:0}
+.close .hash{margin:0 0 .875rem}
+/* the paper floods up out of the foot and the photograph dissolves into it, so
+   the action sits on something solid rather than on their clothes */
+.close::after{
+  content:"";position:absolute;left:0;right:0;bottom:0;z-index:4;pointer-events:none;
+  height:52%;
+  background:linear-gradient(to bottom,
+    rgb(246 241 233 / 0)    0%,
+    rgb(246 241 233 / .18) 34%,
+    rgb(246 241 233 / .55) 62%,
+    rgb(246 241 233 / .88) 84%,
+    rgb(246 241 233 / 1)  100%);
+}
+.close-act{position:absolute;z-index:5;left:0;right:0;bottom:clamp(80px,10vw,132px);text-align:center}
+
+/* on a phone the date fits on one line, which reads better than the two it
+   used to break to, and the figure can stand taller than it does on a desktop */
+@media (max-width:47.99em){
+  .close .figure{height:clamp(400px,66svh,900px)}
+  .close-words{top:auto;bottom:calc(66svh + clamp(112px,12.5vw,182px) - 2.25rem)}
+  .date{font-size:18vw}
+}
+
+.credit{background:var(--paper);padding:1.75rem var(--pad) 2.5rem;text-align:center;
+  font-family:var(--disp);font-size:.9375rem;color:var(--ink-2)}
+.credit a{color:var(--ink);text-underline-offset:3px}
+
+/* ---------------- wide ---------------- */
+
+@media (min-width:48em){
+  :root{--pad:3rem;--bar:4.5rem}
+  .bar-nav{display:flex;align-items:center;padding:.3125rem}
+  .bar-nav a{
+    display:inline-flex;align-items:center;height:2.125rem;padding-inline:1rem;
+    border-radius:999px;text-decoration:none;color:var(--ink);
+    font-family:var(--disp);font-size:1rem;font-weight:500;letter-spacing:.01em;
+    transition:background 220ms var(--ease),color 220ms var(--ease);
+  }
+  .bar-nav a:hover{background:rgb(255 255 255 / .55);color:var(--coral)}
+  .menu-btn{display:none}
+
+  .words-grid{grid-template-columns:minmax(0,.78fr) minmax(0,1fr);gap:3.5rem;align-items:center}
+  .arch img{height:clamp(22rem,30vw,27rem)}
+  /* the couple stay in the middle, where they belong. the names stagger across
+     them, hers from the left and his from the right, so each one loses a single
+     end behind them rather than being cut through the middle. */
+  /* the two names read as one phrase, clear above the couple. anything that
+     overlaps them takes a bite out of the middle of a word, because they stand
+     430-odd pixels wide in the centre of the frame. */
+
+  .row{grid-template-columns:2.75rem 1fr 1.25rem;padding:1.375rem 0}
+  .row-n{font-size:1.75rem}
+  .thread{max-width:48rem}
+  /* the entries pull outward into the wrap's slack so the script swashes
+     clear the road instead of sitting on it */
+  /* the entries sit close to the road, about 20px off it, so each stop reads
+     as belonging to the gathering beside it. they run outward into the wrap's
+     slack instead, which buys the width back. */
+  .rite .inner{max-width:19rem}
+  .rite:nth-of-type(odd) .inner{margin-right:-1.5rem}
+  /* the entries on the left face the road, so their edge hugs it the way the
+     right-hand ones do and each stop sits beside its own heading */
+  .rite:nth-of-type(even) .inner{margin-left:-1.5rem;text-align:right}
+  .rite:nth-of-type(even) dl{text-align:left;margin-left:auto}
+  .rite{padding:2.25rem 0}
+}
+
+/* ---------------- motion ---------------- */
+
+.js .rise{opacity:0;transform:translateY(1.1rem)}
+.js .rise.lit{opacity:1;transform:none;
+  transition:opacity 820ms var(--ease) var(--d,0ms),transform 820ms var(--ease) var(--d,0ms)}
+.js .thread-path.lit{transition:stroke-dashoffset 2200ms var(--ease);stroke-dashoffset:0}
+.js .ring{stroke-dasharray:var(--len);stroke-dashoffset:var(--len)}
+.js .ring.lit{stroke-dashoffset:0;transition:stroke-dashoffset 1100ms var(--ease) 240ms}
+
+@media (prefers-reduced-motion:reduce){
+  .js .rise,.js .rise.lit{opacity:1;transform:none;transition:none}
+  .js .thread-path,.js .ring{stroke-dashoffset:0;transition:none}
+  html{scroll-behavior:auto}
+}
+@media (prefers-reduced-motion:no-preference){html{scroll-behavior:smooth}}
+
+/* on a phone the road runs as a rail down the left and the gatherings sit
+   beside it, because a centred curve has nowhere to go at 390px */
+@media (max-width:47.99em){
+  .thread{padding-left:3.5rem;max-width:none}
+  .thread > svg{left:0;right:auto;width:3.5rem}
+  .rite .inner{max-width:none;margin:0}
+  .rite{padding-block:1.5rem}
+}
+
+/* ============================================================
+   inner pages
+   ============================================================ */
+
+.page-head{text-align:center;padding-block:calc(var(--bar) + clamp(2.5rem,8vw,5rem)) clamp(3rem,9vw,5.5rem)}
+.page-head .hand{font-size:clamp(2.5rem,9vw,4rem);line-height:1.08}
+
+.section{padding-block:clamp(3rem,9vw,5rem) clamp(4rem,10vw,6.5rem);text-align:center}
+.page-head:not(:has(.lede)){padding-bottom:clamp(1.5rem,4vw,2.5rem)}
+
+.pairs{margin:2rem auto 0;display:grid;gap:1.25rem;text-align:left;max-width:30rem}
+.pairs dt{
+  font-family:var(--ui);font-size:.6875rem;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--coral);margin-bottom:.3rem;
+}
+.pairs dd{margin:0;font-family:var(--disp);font-size:1.0625rem;line-height:1.5;color:var(--ink)}
+
+.calls{list-style:none;margin:1.75rem 0 0;padding:0;display:flex;flex-wrap:wrap;gap:.75rem;justify-content:center}
+/* the secondary card: the same engraved plate, ruled but unfilled, so it sits
+   under the primary action instead of competing with it */
+.wa{
+  display:inline-flex;align-items:center;gap:.6rem;min-height:3.125rem;padding:0 1.375rem;
+  border-radius:2px;border:1px solid var(--hair);background:transparent;
+  font-family:var(--disp);font-size:1.0625rem;font-weight:500;letter-spacing:.02em;
+  color:var(--ink);text-decoration:none;
+  transition:border-color 200ms var(--ease),color 200ms var(--ease);
+}
+.wa:hover{border-color:var(--coral);color:var(--coral)}
+
+/* whose side they are on: hers is blue, his is red, the same pair as the names */
+.wa--hers{color:var(--blue);border-color:color-mix(in srgb,var(--blue) 34%,transparent)}
+.wa--hers:hover{color:var(--blue);border-color:var(--blue)}
+.wa--his{color:var(--red);border-color:color-mix(in srgb,var(--red) 34%,transparent)}
+.wa--his:hover{color:var(--red);border-color:var(--red)}
+.wa svg{width:1em;height:1em;flex:0 0 auto;opacity:.75}
+
+.section .act-row{justify-content:center;margin-top:2.25rem}
+.pairs + .note{margin-top:2.25rem}
+
+/* ---------------- aso ebi ---------------- */
+
+.prices{display:grid;gap:1.5rem;margin:0 auto;max-width:46rem}
+.price{padding:1.5rem 0;border-top:1px solid var(--hair)}
+.price:last-child{border-bottom:1px solid var(--hair)}
+.price-n{
+  font-family:var(--disp);font-weight:700;font-size:clamp(2rem,7vw,2.75rem);
+  line-height:1;color:var(--coral);margin:0 0 .5rem;font-variant-numeric:tabular-nums;
+}
+.price-t{font-family:var(--script);font-size:clamp(1.5rem,5.5vw,2rem);line-height:1;
+  color:var(--ink);margin:0 0 .35rem;padding-bottom:.04em}
+.price-s{margin:0;font-family:var(--disp);font-size:1rem;color:var(--ink-2)}
+
+.acct{margin:2rem auto 0;max-width:22rem}
+.acct-n{
+  appearance:none;width:100%;display:flex;align-items:center;justify-content:space-between;
+  gap:1rem;padding:.9rem 1.1rem;border:1px solid var(--hair);border-radius:2px;
+  background:transparent;cursor:pointer;font-family:var(--ui);
+  transition:border-color 200ms var(--ease);
+}
+.acct-n:hover{border-color:var(--coral)}
+.acct-n span{font-size:1.375rem;font-weight:600;letter-spacing:.06em;color:var(--ink);
+  font-variant-numeric:tabular-nums}
+.acct-n em{font-style:normal;font-size:.6875rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--coral)}
+.acct-name{margin:.875rem 0 0;font-family:var(--disp);font-size:1.0625rem;color:var(--ink)}
+.acct-bank{margin:.15rem 0 0;font-family:var(--ui);font-size:.8125rem;font-weight:600;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--ink-2)}
+
+@media (min-width:48em){
+  .prices{grid-template-columns:repeat(3,minmax(0,1fr));gap:2.5rem}
+  .price{border-top:1px solid var(--hair);border-bottom:0}
+  .price:last-child{border-bottom:0}
+}
+
+@media (min-width:48em){
+  .pairs{grid-template-columns:auto minmax(0,1fr);gap:1rem 1.75rem;align-items:baseline;max-width:34rem}
+  .pairs dt{margin:0;text-align:right;padding-top:.3em}
+}
+
+/* ============================================================
+   our love story
+   ============================================================ */
+
+.beat{display:grid;gap:2rem;padding-block:clamp(3rem,9vw,5.5rem)}
+.beat-fig{margin:0}
+.beat .hand{margin-bottom:1.5rem}
+
+.voice{padding-block:1.125rem}
+.voice + .voice{border-top:1px solid var(--hair);margin-top:.5rem}
+.voice .who{margin-bottom:.55rem}
+.voice--her .who{color:var(--blue)}
+.voice--him .who{color:var(--red)}
+.voice .quote{
+  font-family:var(--disp);font-size:clamp(1.125rem,3.6vw,1.3125rem);
+  line-height:1.55;color:var(--ink);margin:0;text-wrap:pretty;
+}
+.voice .quote + .quote{margin-top:.9rem}
+
+/* the proposal has its own room: her crimson backdrop, and candlelight */
+.band--crimson{background:var(--room);color:#C9A19A;position:relative}
+.proposal{padding-block:clamp(4.5rem,12vw,8rem)}
+.proposal-plate{position:absolute;inset:0;z-index:0;overflow:hidden}
+.proposal-plate img{width:100%;height:100%;object-fit:cover;object-position:64% 38%;opacity:.5}
+.proposal-plate::after{
+  content:"";position:absolute;inset:0;
+  background:linear-gradient(to bottom,var(--room) 0%,rgb(42 2 6 / .55) 26%,
+                             rgb(42 2 6 / .72) 70%,var(--room) 100%);
+}
+.proposal-said{position:relative;z-index:1}
+.proposal .hand{color:#F1C9BE}
+.proposal .voice{border-color:rgb(247 235 232 / .18)}
+.proposal .voice + .voice{border-top-color:rgb(247 235 232 / .18)}
+.proposal .voice .quote{color:#F7EBE8}
+.proposal .voice--her .who{color:#9FB6F0}
+.proposal .voice--him .who{color:#E8907C}
+
+@media (min-width:48em){
+  .beat{grid-template-columns:minmax(0,.82fr) minmax(0,1fr);gap:3.75rem;align-items:center}
+  .beat--flip .beat-fig{order:2}
+  .beat .arch img{height:clamp(22rem,32vw,30rem)}
+}
+
+/* the vine from their own invitation, lifted off the card and framing the page
+   the way it frames the printed one */
+.gift{position:relative;overflow:hidden;min-height:100svh;display:grid;align-items:center}
+.gift-inner{
+  position:relative;z-index:1;text-align:center;
+  padding-block:calc(var(--bar) + clamp(3rem,9vw,5rem)) clamp(3.5rem,10vw,6rem);
+}
+.gift-inner .hand{font-size:clamp(2.5rem,9vw,4rem);line-height:1.08;margin-bottom:1.5rem}
+.gift-inner .act-row{justify-content:center;margin-top:2.25rem}
+
+.vine{position:absolute;z-index:0;pointer-events:none;user-select:none}
+/* clear of the floating bar, which owns the top of the page */
+.vine--tl{top:clamp(4.5rem,8vw,7rem);left:0;width:clamp(15rem,30vw,26rem);transform:translate(-5%,0)}
+.vine--br{bottom:clamp(1rem,3vw,2.5rem);right:0;width:clamp(12rem,23vw,20rem);transform:translate(6%,0)}
+
+@media (max-width:47.99em){
+  .vine--tl{top:4.5rem;width:11rem;transform:translate(-14%,0)}
+  .vine--br{bottom:3.5rem;width:9.5rem;transform:translate(16%,0)}
+}
+
+/* ---------------- the hero arrives ---------------- */
+
+/* hers arrives from the left, his from the right, and they meet */
+@keyframes nameFromLeft{
+  from{opacity:0;transform:translateX(calc(-50% - 7vw))}
+  to{opacity:1;transform:translateX(-50%)}
+}
+@keyframes nameFromRight{
+  from{opacity:0;transform:translateX(calc(-50% + 7vw))}
+  to{opacity:1;transform:translateX(-50%)}
+}
+@keyframes figureIn{
+  from{opacity:0;transform:translateY(2.25rem) scale(1.035)}
+  to{opacity:1;transform:none}
+}
+@keyframes markIn{from{opacity:0}to{opacity:1}}
+
+.js .hero .figure{animation:figureIn 1250ms var(--ease) 60ms both}
+.js .s1{animation:nameFromLeft 1150ms var(--ease) 260ms both}
+.js .s2{animation:nameFromRight 1150ms var(--ease) 400ms both}
+.js .hero-tag{animation:markIn 900ms var(--ease) 780ms both}
+.js .bar{animation:markIn 700ms var(--ease) 620ms both}
+
+@media (prefers-reduced-motion:reduce){
+  .js .hero .figure,.js .s1,.js .s2,.js .hero-tag,.js .bar{animation:none}
+}
+
+/* ---------------- a page that opens on the field ---------------- */
+
+.page-open{position:relative;overflow:hidden;display:grid;align-items:center;min-height:46svh}
+.page-open .page-head{
+  position:relative;z-index:1;
+  padding-block:calc(var(--bar) + clamp(2.25rem,6vw,3.75rem)) clamp(3rem,7vw,4.5rem);
+}
+.page-open .hand{color:var(--blue)}
+.page-open .vine--tl{top:clamp(3.5rem,6.5vw,5.5rem);width:clamp(12rem,23vw,19rem);transform:translate(-3%,0)}
+.page-open .vine--br{bottom:clamp(3rem,5vw,4.25rem);width:clamp(9rem,17vw,15rem);transform:translate(6%,0)}
+
+/* the first beat begins right under the tear, not a screen later */
+.page-open + .band .beat{padding-top:clamp(2.5rem,7vw,4rem)}
+
+@media (max-width:47.99em){
+  /* a phone has no room for two sprigs beside a two-line script heading, so
+     keep the one and push it into the corner */
+  .page-open{min-height:0}
+  .page-open .page-head{padding-block:calc(var(--bar) + 3.25rem) 3rem}
+  .page-open .vine--tl{top:3.25rem;width:8rem;transform:translate(-34%,0);opacity:.85}
+  .page-open .vine--br{display:none}
+}
+
+/* ============================================================
+   forms
+   the pass form and the gate check-in are the only inputs on the
+   site. thumb-sized, because both are filled on a phone, and the
+   check-in one at a dim gate.
+   ============================================================ */
+
+.field{display:grid;gap:.5rem;margin-bottom:1.25rem;text-align:left}
+.field > label{
+  font-family:var(--ui);font-size:.6875rem;font-weight:600;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--ink-2);
+}
+
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+input[type="search"],
+input[type="number"],
+input[type="password"],
+select,
+textarea{
+  width:100%;min-width:0;max-width:100%;
+  min-height:3.25rem;padding:.75rem 1rem;
+  font-family:var(--disp);font-size:1.0625rem;line-height:1.4;color:var(--ink);
+  background:var(--paper);border:1px solid var(--hair);border-radius:2px;
+  transition:border-color 180ms var(--ease),box-shadow 180ms var(--ease);
+}
+input:focus-visible,select:focus-visible,textarea:focus-visible{
+  outline:none;border-color:var(--coral);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--coral) 22%,transparent);
+}
+input::placeholder,textarea::placeholder{color:var(--ink-2);opacity:.65}
+input:disabled,select:disabled,button:disabled{opacity:.55;cursor:not-allowed}
+
+select{
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' fill='none' stroke='%233D4A6E' stroke-width='1.6'%3E%3Cpath d='M1 1.5 6 6.5 11 1.5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 1rem center;padding-right:2.75rem;
+}
+
+/* the code a guest types off their email */
+.code-input{
+  font-family:var(--disp);font-size:1.375rem;font-weight:600;
+  letter-spacing:.22em;text-transform:uppercase;
+}
+
+.form-status{
+  margin:1rem 0 0;font-family:var(--disp);font-size:1rem;line-height:1.5;
+  color:var(--ink-2);min-height:1.5rem;
+}
+.form-status[data-state="error"]{color:var(--coral)}
+
+.hint{font-family:var(--ui);font-size:.8125rem;line-height:1.5;color:var(--ink-2);margin:.5rem 0 0;text-align:left}
+
+/* the reply-card plate, used as a picker instead of a native radio: ruled and
+   unfilled at rest, inked like .act when chosen. */
+.choice-row{display:flex;flex-wrap:wrap;gap:.75rem;margin-top:.25rem}
+.choice{
+  position:relative;display:inline-flex;align-items:center;justify-content:center;
+  min-height:3.25rem;padding:0 1.5rem;border-radius:2px;border:1px solid var(--hair);
+  font-family:var(--disp);font-size:1.0625rem;color:var(--ink);cursor:pointer;
+  transition:border-color 200ms var(--ease),background 200ms var(--ease),color 200ms var(--ease);
+}
+.choice:hover{border-color:var(--coral)}
+.choice input{position:absolute;inset:0;opacity:0;margin:0;cursor:pointer}
+.choice:has(input:checked){background:var(--ink);border-color:var(--ink);color:var(--paper)}
+.choice:has(input:checked):hover{border-color:var(--ink)}
+.choice:has(input:focus-visible){outline:2px solid var(--coral);outline-offset:3px}
+
+.reveal{
+  display:grid;grid-template-rows:0fr;opacity:0;transition:grid-template-rows 260ms var(--ease),opacity 220ms var(--ease);
+}
+.reveal[data-open="1"]{grid-template-rows:1fr;opacity:1}
+.reveal > div{overflow:hidden}
+
+.act--block{width:100%;padding-inline:1.5rem}
+
+/* ============================================================
+   gate check-in
+   an usher opens this once and works it repeatedly at a dim
+   door, one-handed. one clear path (the camera), fallbacks a
+   tap away, the outcome unmissable when it arrives.
+   ============================================================ */
+
+.gate{display:grid;gap:2rem;text-align:left;max-width:30rem;margin-inline:auto}
+
+.usher-bar{
+  display:flex;align-items:center;gap:.75rem;padding:.5rem .875rem;
+  border:1px solid var(--hair);border-radius:2px;background:var(--paper);
+}
+.usher-bar-label{
+  font-family:var(--ui);font-size:.6875rem;font-weight:600;letter-spacing:.14em;
+  text-transform:uppercase;color:var(--ink-2);white-space:nowrap;flex:0 0 auto;
+}
+.usher-bar input{
+  flex:1 1 auto;min-width:0;border:0;background:transparent;padding:.375rem 0;
+  min-height:auto;font-size:1rem;
+}
+.usher-bar input:focus-visible{outline:none;box-shadow:none}
+
+.scan-primary{display:grid;gap:.75rem}
+.camera-frame{
+  border-radius:2px;overflow:hidden;background:#0A1130;
+  aspect-ratio:4/3;
+}
+.camera-frame video{width:100%;height:100%;object-fit:cover;display:block}
+
+.fallback{display:grid;gap:.75rem}
+.fallback-label{
+  font-family:var(--ui);font-size:.8125rem;color:var(--ink-2);margin:0;
+}
+.fallback .choice{flex:1 1 0;padding-inline:1rem}
+.fallback-panel{display:grid;gap:.75rem}
+
+.result{
+  padding:1.5rem;border-radius:2px;
+  background:color-mix(in srgb, var(--coral) 7%, var(--paper));
+  border:1px solid color-mix(in srgb, var(--coral) 22%, transparent);
+  display:grid;gap:.625rem;
+}
+.result-eyebrow{
+  font-family:var(--ui);font-size:.6875rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--coral);margin:0;
+}
+.result-name{font-family:var(--disp);font-size:1.625rem;font-weight:700;color:var(--ink);margin:0;line-height:1.15}
+.result-detail{font-family:var(--disp);font-size:1.0625rem;color:var(--ink-2);margin:0}
+.result-detail .ok{display:inline-flex;align-items:center;gap:.4rem;color:var(--ink-2)}
+.result-detail .ok svg{width:1em;height:1em;flex:0 0 auto}
+.result .act{margin-top:.25rem}
+
+/* ============================================================
+   admin
+   Guests and Photos are one small tool for Kathryn and Samuel: a
+   real tab switch up top instead of a sentence, and everything
+   below sits in its own rounded card rather than a hairline box
+   â€” closer to a wallet pass than a settings form.
+   ============================================================ */
+
+.guest-page{max-width:40rem;margin-inline:auto;text-align:left}
+
+.admin-head{
+  display:flex;align-items:center;justify-content:space-between;gap:1rem;
+  flex-wrap:wrap;margin-bottom:1.75rem;
+}
+.admin-tabs{
+  display:inline-flex;gap:.25rem;padding:.25rem;border-radius:999px;
+  background:var(--field);flex:0 0 auto;
+}
+.admin-tab{
+  appearance:none;border:0;background:transparent;cursor:pointer;
+  display:inline-flex;align-items:center;gap:.4rem;white-space:nowrap;
+  min-height:2.375rem;padding:0 1.125rem;border-radius:999px;
+  font-family:var(--ui);font-size:.8125rem;font-weight:600;letter-spacing:.02em;
+  color:var(--ink-2);text-decoration:none;
+  transition:background 200ms var(--ease),color 200ms var(--ease),box-shadow 200ms var(--ease);
+}
+.admin-tab svg{width:1.05em;height:1.05em;flex:0 0 auto}
+.admin-tab:hover{color:var(--ink)}
+.admin-tab[aria-current="page"]{background:var(--ink);color:var(--paper);box-shadow:0 2px 10px rgb(10 17 48/.22)}
+
+.admin-signout{
+  appearance:none;border:0;cursor:pointer;flex:0 0 auto;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:2.375rem;height:2.375rem;border-radius:999px;
+  background:var(--field);color:var(--ink-2);
+  transition:background 200ms var(--ease),color 200ms var(--ease);
+}
+.admin-signout svg{width:1.05rem;height:1.05rem}
+.admin-signout:hover{background:var(--coral);color:var(--paper)}
+.logout-form{margin:0}
+
+/* three tabs and the sign out will not fit a phone at the desktop padding, and
+   wrapping drops sign out onto a line of its own looking like a stray button */
+@media (max-width:26em){
+  .admin-head{gap:.5rem}
+  .admin-tab{padding:0 .7rem;gap:.3rem;font-size:.75rem}
+  .admin-tabs{padding:.2rem}
+}
+
+.card{
+  background:var(--paper);border-radius:20px;padding:1.5rem;margin-bottom:1.5rem;
+  box-shadow:0 1px 2px rgb(10 17 48/.06),0 12px 28px rgb(10 17 48/.09);
+}
+
+.stat-row{display:grid;grid-template-columns:1fr 1fr;gap:.875rem;margin-bottom:1.5rem}
+.stat-card{border-radius:18px;padding:1.25rem 1.375rem;color:var(--paper);display:grid;gap:.3rem}
+.stat-card.stat--total{background:linear-gradient(155deg,var(--ink),var(--ink-2))}
+.stat-card.stat--in{background:linear-gradient(155deg,var(--coral),var(--coral-lit))}
+.stat-number{font-family:var(--disp);font-size:2.25rem;font-weight:700;line-height:1}
+.stat-label{font-family:var(--ui);font-size:.6875rem;font-weight:600;letter-spacing:.12em;text-transform:uppercase;opacity:.84}
+
+.share-box{display:grid;gap:.875rem}
+.share-box p{margin:0;font-family:var(--disp);color:var(--ink-2)}
+.share-link{
+  font-family:var(--ui);font-size:.9375rem;word-break:break-all;
+  padding:.75rem;background:var(--field);border-radius:10px;color:var(--ink);
+  user-select:all;
+}
+.share-actions{display:flex;gap:.75rem;flex-wrap:wrap}
+.share-actions .act{flex:1 1 auto;min-height:3rem}
+
+.guest-summary{margin:0 0 1.25rem;color:var(--ink-2);font-family:var(--disp);font-size:1.0625rem}
+
+.guest-card{padding:0;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch}
+.guest-table{width:100%;min-width:32rem;border-collapse:collapse;font-family:var(--disp);font-size:.9375rem}
+.guest-table th{
+  text-align:left;font-family:var(--ui);font-size:.6875rem;font-weight:600;
+  letter-spacing:.1em;text-transform:uppercase;color:var(--ink-2);
+  padding:1rem 1.25rem .75rem;
+}
+.guest-table td{padding:.875rem 1.25rem;border-top:1px solid var(--hair);vertical-align:middle}
+.guest-table tr:first-child td{border-top:0}
+.guest-table tr:hover td{background:color-mix(in srgb, var(--field) 16%, transparent)}
+.guest-table .status-ok{display:inline-flex;align-items:center;gap:.45rem;color:var(--ink-2)}
+.guest-table .status-ok svg{
+  width:1.125rem;height:1.125rem;padding:.28rem;box-sizing:content-box;flex:0 0 auto;
+  border-radius:999px;background:var(--ink);color:var(--paper);
+}
+.guest-table .status-waiting{display:inline-flex;align-items:center;gap:.45rem;color:var(--ink-2)}
+.guest-table .status-waiting::before{
+  content:"";width:1.125rem;height:1.125rem;border-radius:999px;flex:0 0 auto;
+  border:1.5px solid var(--hair);
+}
+.guest-empty{padding:2rem 0;text-align:center;color:var(--ink-2);font-family:var(--disp)}
+
+/* a cancelled pass stays on the list rather than vanishing, so she can see
+   what she did and put it back, and so the printed sheet at the gate says
+   who was turned off rather than just missing them out */
+.guest-table .status-cancelled{display:inline-flex;align-items:center;gap:.45rem;color:var(--coral)}
+.guest-table .status-cancelled::before{
+  content:"";width:1.125rem;height:1.125rem;border-radius:999px;flex:0 0 auto;
+  border:1.5px solid color-mix(in srgb,var(--coral) 45%,transparent);
+}
+.guest-table tr.is-cancelled td:first-child{text-decoration:line-through;color:var(--ink-2)}
+.guest-table tr.is-cancelled td{opacity:.72}
+.pass-form{margin:0}
+.pass-cancel,.pass-undo{
+  appearance:none;background:transparent;cursor:pointer;white-space:nowrap;
+  border:1px solid var(--hair);border-radius:999px;padding:.3rem .7rem;
+  font-family:var(--ui);font-size:.6875rem;font-weight:600;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink-2);
+  transition:color 200ms var(--ease),border-color 200ms var(--ease);
+}
+.pass-cancel:hover{color:var(--coral);border-color:var(--coral)}
+.pass-undo:hover{color:var(--ink);border-color:var(--ink)}
+
+/* on a phone the code is the one column she never needs, the ushers do, so it
+   goes rather than push Cancel off the edge of the card. screen only, so a
+   list printed from her phone still carries the codes to the gate. this sits
+   below the padding it trims, or the shorthand above wins on source order. */
+@media screen and (max-width:47.99em){
+  .guest-table{min-width:0}
+  .guest-table th:nth-child(4),.guest-table td:nth-child(4){display:none}
+  .guest-table th,.guest-table td{padding-inline:.55rem}
+  .pass-cancel,.pass-undo{padding:.3rem .55rem;letter-spacing:.02em}
+}
+
+/* ============================================================
+   photo gallery
+   the photos are the thing. the grid gets out of the way, and
+   the lightbox has no chrome beyond what closes or moves it.
+   ============================================================ */
+
+.album-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(9.5rem,1fr));
+  gap:1rem;max-width:64rem;margin-inline:auto;
+}
+.album-card{
+  position:relative;aspect-ratio:1;border-radius:4px;overflow:hidden;
+  background:var(--field);display:block;text-decoration:none;color:inherit;
+}
+.album-card img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 260ms var(--ease)}
+.album-card:hover img{transform:scale(1.05)}
+.album-card:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+.album-caption{
+  position:absolute;inset:auto 0 0 0;padding:1.75rem .8rem .8rem;
+  background:linear-gradient(to top, rgb(10 17 48 / .82), rgb(10 17 48 / 0));
+  text-align:left;
+}
+.album-name{
+  display:block;font-family:var(--script);font-size:1.5rem;line-height:1.05;
+  color:var(--paper);
+}
+.album-count{
+  display:block;font-family:var(--ui);font-size:.6875rem;letter-spacing:.1em;
+  text-transform:uppercase;color:rgb(246 241 233 / .82);margin-top:.25rem;
+}
+.photo-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr));
+  gap:.5rem;max-width:64rem;margin-inline:auto;
+}
+.photo-tile{
+  appearance:none;border:0;padding:0;margin:0;cursor:pointer;
+  aspect-ratio:1;border-radius:2px;overflow:hidden;background:var(--field);
+}
+.photo-tile img{width:100%;height:100%;object-fit:cover;display:block;transition:transform 260ms var(--ease)}
+.photo-tile:hover img{transform:scale(1.04)}
+.photo-tile:focus-visible{outline:2px solid var(--coral);outline-offset:2px}
+
+.lightbox{
+  position:fixed;inset:0;z-index:80;background:rgb(10 17 48 / .92);
+  display:flex;align-items:center;justify-content:center;padding:clamp(1rem,5vw,3rem);
+}
+.lightbox img{max-width:100%;max-height:100%;display:block;border-radius:2px}
+.lightbox-actions{position:absolute;top:1rem;right:1rem;display:flex;gap:.5rem;align-items:center}
+.lightbox-close,.lightbox-download{
+  appearance:none;border:1px solid rgb(246 241 233 / .4);background:transparent;color:var(--paper);
+  font-family:var(--ui);font-size:.6875rem;font-weight:600;letter-spacing:.16em;
+  text-transform:uppercase;height:2.125rem;padding-inline:.9rem;border-radius:999px;cursor:pointer;
+  text-decoration:none;display:inline-flex;align-items:center;
+  transition:background 200ms var(--ease),color 200ms var(--ease);
+}
+.lightbox-close:hover,.lightbox-download:hover{background:var(--paper);color:var(--ink)}
+.lightbox-bar{
+  position:absolute;bottom:1rem;left:50%;transform:translateX(-50%);
+  display:flex;align-items:center;gap:1.25rem;
+}
+.lightbox-nav{
+  appearance:none;border:1px solid rgb(246 241 233 / .4);border-radius:999px;
+  background:transparent;color:var(--paper);font-size:1.125rem;cursor:pointer;
+  width:2.75rem;height:2.75rem;line-height:1;flex:0 0 auto;
+  transition:background 200ms var(--ease),color 200ms var(--ease);
+}
+.lightbox-nav:hover{background:var(--paper);color:var(--ink)}
+.lightbox-count{
+  margin:0;font-family:var(--ui);font-size:.8125rem;letter-spacing:.08em;
+  color:var(--paper);min-width:3.5rem;text-align:center;
+}
+
+/* the admin photo manager: same tile grid, a delete button riding on each one,
+   a tiny retag row underneath so recategorising later is just as easy */
+.photo-manage-grid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(8.5rem,1fr));
+  gap:1rem;
+}
+.photo-manage-card{display:grid;gap:.4rem}
+.photo-manage-tile{position:relative;aspect-ratio:1;border-radius:14px;overflow:hidden;background:var(--field)}
+.photo-manage-tile img{width:100%;height:100%;object-fit:cover;display:block}
+.photo-manage-tile form{position:absolute;top:.35rem;right:.35rem;margin:0}
+.photo-delete{
+  appearance:none;border:0;border-radius:999px;width:1.75rem;height:1.75rem;
+  background:rgb(10 17 48 / .72);color:var(--paper);font-size:.9375rem;line-height:1;cursor:pointer;
+}
+.photo-delete:hover{background:var(--coral)}
+.retag-form{display:flex;gap:.35rem;margin:0}
+.retag-form input{
+  flex:1 1 0;min-width:0;min-height:2.25rem;padding:.4rem .625rem;
+  font-family:var(--ui);font-size:.75rem;border-radius:8px;
+}
+.retag-form button{
+  flex:0 0 auto;appearance:none;border:1px solid var(--hair);background:transparent;
+  border-radius:999px;padding:0 .7rem;font-family:var(--ui);font-size:.6875rem;font-weight:600;
+  letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2);cursor:pointer;
+}
+.retag-form button:hover{color:var(--coral);border-color:var(--coral)}
+.upload-field{
+  border:1px dashed var(--hair);border-radius:14px;padding:1.5rem;text-align:center;
+  font-family:var(--disp);color:var(--ink-2);
+}
+.upload-field input{margin-top:.75rem}
+
+/* ---------------- the music ---------------- */
+/* it floats with the other controls rather than sitting in the page, because
+   it belongs to the whole visit and not to the paragraph it happens to be
+   beside. collapsed to a disc until it is playing, when the song's name
+   unrolls beside it. */
+.music-btn{
+  position:fixed;z-index:41;left:clamp(.7rem,2vw,1.4rem);
+  bottom:calc(clamp(.7rem,2vw,1.4rem) + env(safe-area-inset-bottom,0px));
+  appearance:none;border:0;cursor:pointer;color:var(--ink);
+  display:inline-flex;align-items:center;gap:.5rem;
+  height:2.75rem;padding:0 .85rem;max-width:min(70vw,22rem);
+  font-family:var(--ui);font-size:.8125rem;font-weight:600;
+  transition:color 200ms var(--ease);
+}
+.music-btn:hover{color:var(--coral)}
+.music-ico{width:1.125rem;height:1.125rem;flex:0 0 auto}
+.music-btn[data-playing="1"] .music-ico{display:none}
+/* the width snaps and the fade carries the reveal, rather than animating
+   max-width and making the browser lay the page out again on every frame */
+.music-name{
+  overflow:hidden;white-space:nowrap;text-overflow:ellipsis;
+  max-width:0;opacity:0;transition:opacity 260ms var(--ease);
+}
+.music-btn[data-playing="1"] .music-name{max-width:14rem;opacity:1}
+
+/* three bars keeping time, so it is obvious at a glance that sound is on */
+.music-bars{display:none;align-items:flex-end;gap:2px;height:1rem;flex:0 0 auto}
+.music-btn[data-playing="1"] .music-bars{display:inline-flex}
+.music-bars i{display:block;width:2px;height:100%;background:currentColor;transform-origin:50% 100%}
+.music-bars i:nth-child(1){animation:beat 900ms var(--ease) infinite}
+.music-bars i:nth-child(2){animation:beat 900ms var(--ease) 140ms infinite}
+.music-bars i:nth-child(3){animation:beat 900ms var(--ease) 280ms infinite}
+@keyframes beat{0%,100%{transform:scaleY(.35)}50%{transform:scaleY(1)}}
+@media (prefers-reduced-motion:reduce){
+  .music-bars i{animation:none;transform:scaleY(.7)}
+}
+
+/* the nudge. it sits on top of the button it is talking about, with a tail
+   pointing down at it, and leaves as soon as it has been understood. */
+.music-tip{
+  position:fixed;z-index:42;left:clamp(.7rem,2vw,1.4rem);
+  bottom:calc(clamp(.7rem,2vw,1.4rem) + 3.25rem + env(safe-area-inset-bottom,0px));
+  max-width:min(17rem,calc(100vw - 2.4rem));
+  display:flex;align-items:flex-start;gap:.5rem;
+  padding:.7rem .8rem .7rem .9rem;border-radius:14px;
+  opacity:0;transform:translateY(.4rem);pointer-events:none;
+  transition:opacity 320ms var(--ease),transform 320ms var(--ease);
+}
+.music-tip[data-open="1"]{opacity:1;transform:translateY(0);pointer-events:auto}
+.music-tip::after{
+  content:"";position:absolute;left:1.15rem;bottom:-.36rem;
+  width:.75rem;height:.75rem;transform:rotate(45deg);
+  background:rgb(255 255 255 / .52);
+}
+.music-tip-words{
+  margin:0;font-family:var(--disp);font-size:.9375rem;line-height:1.4;color:var(--ink);
+}
+.music-tip-close{
+  appearance:none;border:0;background:transparent;cursor:pointer;flex:0 0 auto;
+  width:1.25rem;height:1.25rem;padding:0;line-height:1;margin-top:-.1rem;
+  font-size:1.125rem;color:var(--ink-2);opacity:.6;
+}
+.music-tip-close:hover{opacity:1;color:var(--coral)}
+@media (prefers-reduced-motion:reduce){
+  .music-tip{transition:opacity 200ms linear;transform:none}
+  .music-tip[data-open="1"]{transform:none}
+}
+
+/* the admin side of the music. the playlist is one card of rows, the way the
+   guest list is, rather than a stack of little cards each with its own form. */
+.card-h{
+  margin:0 0 .875rem;font-family:var(--ui);font-size:.6875rem;font-weight:600;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--ink-2);
+}
+.card-note{margin:0 0 1.25rem;font-family:var(--disp);color:var(--ink-2)}
+.card--rows{padding:.25rem .5rem}
+
+/* the file input's own chrome says "No file chosen" in a system font, which is
+   the one thing on the page that looks like it belongs to another website */
+.drop{
+  display:grid;gap:.2rem;place-items:center;text-align:center;cursor:pointer;
+  border:1px dashed var(--hair);border-radius:14px;padding:1.5rem 1rem;
+  transition:border-color 200ms var(--ease),background 200ms var(--ease);
+}
+.drop:hover,.drop:focus-within{border-color:var(--coral);background:rgb(192 73 47 / .04)}
+.drop input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.drop-lead{font-family:var(--disp);font-size:1.0625rem;color:var(--ink)}
+.drop-sub{font-family:var(--ui);font-size:.8125rem;color:var(--ink-2);
+  max-width:100%;overflow:hidden;text-overflow:ellipsis}
+
+/* two settings, so a segmented control rather than a pair of radios and a
+   Save. tapping one is the decision; there is nothing left to confirm. */
+.seg{display:flex;gap:.25rem;padding:.25rem;border-radius:999px;background:var(--field)}
+.seg-opt{
+  flex:1 1 0;appearance:none;border:0;background:transparent;cursor:pointer;
+  min-height:2.375rem;border-radius:999px;
+  font-family:var(--ui);font-size:.8125rem;font-weight:600;color:var(--ink-2);
+  transition:background 200ms var(--ease),color 200ms var(--ease),box-shadow 200ms var(--ease);
+}
+.seg-opt:hover{color:var(--ink)}
+.seg-opt[aria-pressed="true"]{background:var(--ink);color:var(--paper);box-shadow:0 2px 10px rgb(10 17 48/.22)}
+
+.songs{list-style:none;margin:0;padding:0}
+.song{
+  display:flex;align-items:center;gap:.5rem;
+  min-height:3.25rem;padding:.5rem .375rem;
+  border-top:1px solid var(--hair);background:var(--paper);
+}
+.song:first-child{border-top:0}
+.song[data-dragging="1"]{
+  border-radius:12px;box-shadow:0 10px 30px rgb(10 17 48/.18);
+  position:relative;z-index:2;border-top-color:transparent;
+}
+.song[data-dragging="1"] + .song{border-top-color:transparent}
+
+.song-grip{
+  appearance:none;border:0;background:transparent;cursor:grab;flex:0 0 auto;
+  width:1.75rem;height:2.25rem;padding:0;color:var(--ink-2);opacity:.55;
+  touch-action:none;   /* the drag is ours, not the page's scroll */
+}
+.song-grip:hover{opacity:1}
+.song-grip:active{cursor:grabbing}
+.song-grip svg{width:1rem;height:1rem}
+
+.song-play{
+  appearance:none;border:0;background:var(--field);cursor:pointer;flex:0 0 auto;
+  width:2.125rem;height:2.125rem;border-radius:999px;padding:0;
+  display:grid;place-items:center;color:var(--ink);
+  font-family:var(--ui);font-size:.75rem;font-weight:600;
+  transition:background 200ms var(--ease),color 200ms var(--ease);
+}
+.song-play > *{grid-area:1/1}
+.song-play:hover{background:var(--ink);color:var(--paper)}
+.song-icon{display:none}
+.song-icon svg{width:.875rem;height:.875rem;display:block}
+.song-play:hover .song-no{display:none}
+.song-play:hover .song-icon--play{display:block}
+.song[data-playing="1"] .song-play{background:var(--ink);color:var(--paper)}
+.song[data-playing="1"] .song-no,
+.song[data-playing="1"] .song-play:hover .song-icon--play{display:none}
+.song[data-playing="1"] .song-icon--pause{display:block}
+
+.song-title{flex:1 1 auto;min-width:0;margin:0}
+/* it reads as the song's name and turns into a field when you go to change it.
+   typed as input.song-field because the site's own input[type="text"] rule
+   outranks a bare class and hands back the box we are trying to lose. */
+input.song-field{
+  width:100%;min-height:2.25rem;padding:.35rem .5rem;
+  font-family:var(--disp);font-size:1.0625rem;line-height:1.3;color:var(--ink);
+  background:transparent;border:1px solid transparent;border-radius:8px;
+  text-overflow:ellipsis;
+}
+input.song-field:hover{border-color:var(--hair)}
+input.song-field:focus,input.song-field:focus-visible{
+  outline:none;background:var(--paper);border-color:var(--coral);
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--coral) 18%,transparent);
+}
+.song-remove{
+  appearance:none;border:0;background:transparent;cursor:pointer;flex:0 0 auto;
+  width:2rem;height:2rem;border-radius:999px;padding:0;display:grid;place-items:center;
+  color:var(--ink-2);opacity:.55;transition:color 200ms var(--ease),opacity 200ms var(--ease);
+}
+.song-remove svg{width:.875rem;height:.875rem}
+.song-remove:hover{color:var(--coral);opacity:1}
+.hint--centre{text-align:center;margin-top:.75rem}
+
+
+@media print{
+  .bar,.scroll-edge,.share-box,.print-hide{display:none !important}
+  body,.band{background:#fff !important}
+  .card{box-shadow:none;border-radius:0;padding:0;margin-bottom:0}
+  .guest-table td,.guest-table th{border-color:#ccc}
+}
